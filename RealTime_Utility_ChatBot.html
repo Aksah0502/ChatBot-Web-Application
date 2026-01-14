@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Simple Utility Chatbot</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      margin: 0;
+      background: #f5f5f5;
+    }
+
+    .app {
+      max-width: 500px;
+      margin: auto;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: white;
+    }
+
+    .messages {
+      flex-grow: 1;
+      padding: 15px;
+      overflow-y: auto;
+    }
+
+    .user {
+      text-align: right;
+      margin-bottom: 10px;
+    }
+
+    .bot {
+      text-align: left;
+      margin-bottom: 10px;
+    }
+
+    .text {
+      display: inline-block;
+      padding: 10px 15px;
+      border-radius: 8px;
+      background: #eee;
+      max-width: 80%;
+    }
+
+    .user .text {
+      background: #198754;
+      color: white;
+    }
+
+    .input-box {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+    }
+
+    input {
+      flex: 1;
+      padding: 10px;
+      font-size: 14px;
+    }
+
+    button {
+      margin-left: 8px;
+      padding: 10px 15px;
+      background: #198754;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+
+    const API_KEY = "1adf0d14cfdb6ffcae43f7ecbde6d3c8";
+
+    function App() {
+      const [messages, setMessages] = React.useState([
+        { text: "Hi! Ask me about date, weather, or AQI.", sender: "bot" }
+      ]);
+
+      const [input, setInput] = React.useState("");
+
+      async function sendMessage() {
+        if (input.trim() === "") return;
+
+        setMessages(prev => [...prev, 
+        { text: input, sender: "user" }
+            ]);
+        const text = input.toLowerCase();
+        setInput("");
+
+        let reply = "";
+
+        try {
+          if (text.includes("date")) {
+            reply = "Today is " + new Date().toDateString();
+          }
+
+          else if (text.includes("weather")) {
+            const city = input.split("in")[1];
+            if (!city) {
+              reply = "Please write city name like: weather in Delhi";
+            } else {
+              const res = await fetch(
+                `https://api.openweathermap.org/data/2.5/weather?q=${city.trim()}&units=metric&appid=${API_KEY}`
+              );
+              const data = await res.json();
+              reply = `Weather in ${city.trim()}: ${data.main.temp}°C`;
+            }
+          }
+
+          else if (text.includes("aqi")) {
+            const city = input.split("in")[1];
+            if (!city) {
+              reply = "Please write city name like: AQI in Mumbai";
+            } else {
+              const geo = await fetch(
+                `https://api.openweathermap.org/geo/1.0/direct?q=${city.trim()}&limit=1&appid=${API_KEY}`
+              ).then(res => res.json());
+
+              const aqi = await fetch(
+                `https://api.openweathermap.org/data/2.5/air_pollution?lat=${geo[0].lat}&lon=${geo[0].lon}&appid=${API_KEY}`
+              ).then(res => res.json());
+
+              reply = `AQI in ${city.trim()}: ${aqi.list[0].main.aqi}`;
+            }
+          }
+
+          else {
+            reply = "Sorry, I only support date, weather and AQI.";
+          }
+        } catch {
+          reply = "Something went wrong. Please try again.";
+        }
+
+        setMessages(prev => [...prev, { text: reply, sender: "bot" }]);
+      }
+
+      return (
+        <div className="app">
+          <div className="messages">
+            {messages.map((msg, i) => (
+              <div key={i} className={msg.sender}>
+                <div className="text">{msg.text}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="input-box">
+            <input
+              value={input}
+              placeholder="Type message..."
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && sendMessage()}
+            />
+            <button onClick={sendMessage}>Send</button>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
