@@ -80,11 +80,7 @@
 
   <script type="text/babel">
 
-<<<<<<< Updated upstream
     const API_KEY = " ";
-=======
-    const API_KEY = "1adf0d14cfdb6ffcae43f7ecbde6d3c8 ";
->>>>>>> Stashed changes
 
     function App() {
       const [messages, setMessages] = React.useState([
@@ -135,7 +131,17 @@
                 `https://api.openweathermap.org/data/2.5/air_pollution?lat=${geo[0].lat}&lon=${geo[0].lon}&appid=${API_KEY}`
               ).then(res => res.json());
 
-              reply = `AQI in ${city.trim()}: ${aqi.list[0].main.aqi}`;
+              const aqiValue = aqi.list[0].main.aqi;
+
+              const aqiText = {
+                1: "Good",
+                2: "Fair",
+                3: "Moderate",
+                4: "Poor",
+                5: "Very Poor"
+              };
+
+              reply = `AQI in ${city.trim()}: ${aqiValue} (${aqiText[aqiValue]})`;
             }
           }
 
