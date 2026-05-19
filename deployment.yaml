@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: utility-chatbot-deployment
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: utility-chatbot
+
+  template:
+    metadata:
+      labels:
+        app: utility-chatbot
+
+    spec:
+      containers:
+      - name: utility-chatbot-container
+        image: utility-chatbot
+        imagePullPolicy: Never #Otherwise Kubernetes tries to pull from DockerHub
+
+        ports:
+        - containerPort: 80
